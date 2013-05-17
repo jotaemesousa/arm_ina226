@@ -10,30 +10,31 @@
 
 #include "stdint.h"
 
+
 // Registers
-#define CONFGURATION_REGISTER				0x00
-#define SHUNT_VOLTAGE_REGISTER				0x01
-#define BUS_VOLTAGE_REGISTER				0x02
-#define POWER_REGISTER						0x03
-#define CURRENT_REGISTER					0x04
-#define CALIBRATION_REGISTER				0x05
-#define MASK_ENABLE_REGISTER				0x06
-#define ALERT_LIMIT_REGISTER				0x07
+#define REG_CONFGURATION					0x00
+#define REG_SHUNT_VOLTAGE					0x01
+#define REG_BUS_VOLTAGE						0x02
+#define REG_POWER							0x03
+#define REG_CURRENT							0x04
+#define REG_CALIBRATION						0x05
+#define REG_MASK_ENABLE						0x06
+#define REG_ALERT_LIMIT						0x07
 
 // Operating Mode Settings
-#define POWER_DOWN_MODE						0b00000000
-#define SHUNT_VOLTAGE_TRIGGERED_MODE		0b00000001
-#define BUS_VOLTAGE_TRIGGERED_MODE			0b00000010
-#define SHUNT_BUS_VOLTAGE_TRIGGERED_MODE	0b00000011
-#define SHUNT_VOLTAGE_CONTINUOUS_MODE		0b00000101
-#define BUS_VOLTAGE_CONTINUOUS_MODE			0b00000110
-#define SHUNT_BUS_VOLTAGE_CONTINUOUS_MODE	0b00000111
+#define MODE_POWER_DOWN						0b00000000
+#define MODE_SHUNT_VOLTAGE_TRIGGERED		0b00000001
+#define MODE_BUS_VOLTAGE_TRIGGERED			0b00000010
+#define MODE_SHUNT_BUS_VOLTAGE_TRIGGERED	0b00000011
+#define MODE_SHUNT_VOLTAGE_CONTINUOUS		0b00000101
+#define MODE_BUS_VOLTAGE_CONTINUOUS			0b00000110
+#define MODE_SHUNT_BUS_VOLTAGE_CONTINUOUS	0b00000111
 
 class INA226
 {
 
 	char addr_;
-	uint16_t conf_reg_;
+	uint16_t conf_reg_high_,conf_reg_low_;
 
 
 
@@ -42,8 +43,8 @@ public:
 	INA226(char addr);
 
 //private
-	uint16_t read_register(uint8_t reg);
-		void write_register(uint8_t reg, uint16_t value);
+//	uint16_t read_register(uint8_t reg);
+//		void write_register(uint8_t reg, uint16_t value);
 
 
 	void set_i2c_addr(char addr){ addr_ = addr;}

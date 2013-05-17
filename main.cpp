@@ -119,13 +119,13 @@ int main(void)
 
 	INA226 power_meter = INA226(0x45);
 	uint16_t read_ina;
-	read_ina = power_meter.read_register(CONFGURATION_REGISTER);
+	read_ina = power_meter.read_register(REG_CONFGURATION);
 
 	UARTprintf("Conf reg = %X\n", read_ina);
 
 	power_meter.set_sample_average(4);
 
-	read_ina = power_meter.read_register(CONFGURATION_REGISTER);
+	read_ina = power_meter.read_register(REG_CONFGURATION);
 
 	UARTprintf("Conf reg = %X", read_ina);
 
