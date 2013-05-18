@@ -131,14 +131,20 @@ int main(void)
 
 	read_ina = power_meter.read_register(REG_CONFGURATION);
 
-	UARTprintf("Conf reg = %X", read_ina);
+	UARTprintf("Conf reg = %X\n", read_ina);
+
+	power_meter.set_calibration_value(2560);
+
+	read_ina = power_meter.get_calibration_value();
+
+	UARTprintf("Calib. value = %d\n", read_ina);
 
 	while (1)
 	{
 		read_ina = power_meter.get_bus_voltage();
 		UARTprintf("Bus Voltage = %d mV\n", read_ina);
-//		read_ina = power_meter.read_register(REG_CURRENT);
-//		UARTprintf("Current = %X\n", read_ina);
+		read_ina = power_meter.get_bus_current();
+		UARTprintf("Current = %X\ mAn", read_ina);
 		SysCtlDelay(200*ulClockMS);
 	}
 

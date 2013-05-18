@@ -126,21 +126,11 @@ int INA226::get_bus_voltage(bool return_raw_data)
 	}
 }
 
-int INA226::get_bus_current(bool return_raw_data)
+int INA226::get_bus_current(void)
 {
 	unsigned int read_data = read_register(REG_CURRENT);
 
 	read_data = TwoComplement2ModSig_16bit(read_data);
-
-	if(return_raw_data)
-	{
-		read_data *= 125 / 1000000;
-		return read_data;
-	}
-	else
-	{
-		return read_data;
-	}
 }
 
 int INA226::get_shunt_voltage(bool return_raw_data)
@@ -204,8 +194,14 @@ void INA226::set_operating_mode(uint8_t mode)
 
 void INA226::set_calibration_value(uint16_t calib)
 {
-
+	write_register(REG_CALIBRATION, calib & 0xFFFF);
 }
+
+uint16_t INA226::get_calibration_value(void)
+{
+	return read_register(REG_CALIBRATION);
+}
+
 
 int TwoComplement2ModSig_16bit(uint16_t a)
 {

@@ -54,9 +54,12 @@ public:
 
 
 	int get_bus_voltage(bool return_raw_data = true);
-	int get_bus_current(bool return_raw_data = true);
+	int get_bus_current(void);
 	int get_shunt_voltage(bool return_raw_data = true);
+
 	void set_calibration_value(uint16_t calib);
+	uint16_t get_calibration_value(void);
+
 
 };
 
