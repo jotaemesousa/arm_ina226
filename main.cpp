@@ -133,7 +133,7 @@ int main(void)
 
 	UARTprintf("Conf reg = %X\n", read_ina);
 
-	power_meter.set_calibration_value(2560);
+	power_meter.set_calibration_value(17066);
 
 	read_ina = power_meter.get_calibration_value();
 
@@ -143,8 +143,13 @@ int main(void)
 	{
 		read_ina = power_meter.get_bus_voltage();
 		UARTprintf("Bus Voltage = %d mV\n", read_ina);
+
+		read_ina = power_meter.get_shunt_voltage();
+		UARTprintf("Shunt Voltage = %d uV\n", read_ina);
+
 		read_ina = power_meter.get_bus_current();
-		UARTprintf("Current = %X\ mAn", read_ina);
+		UARTprintf("Current = %X mA\n", read_ina);
+
 		SysCtlDelay(200*ulClockMS);
 	}
 
