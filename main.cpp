@@ -148,7 +148,7 @@ int main(void)
 		UARTprintf("Shunt Voltage = %d uV\n", read_ina);
 
 		read_ina = power_meter.get_bus_current();
-		UARTprintf("Current = %X mA\n", read_ina);
+		UARTprintf("Current = %d mA\n", read_ina);
 
 		SysCtlDelay(200*ulClockMS);
 	}
