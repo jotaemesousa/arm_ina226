@@ -10,7 +10,6 @@
 
 #include "stdint.h"
 
-
 // Registers
 #define REG_CONFGURATION					0x00
 #define REG_SHUNT_VOLTAGE					0x01
@@ -41,10 +40,10 @@ class INA226
 public:
 	INA226();
 	INA226(char addr);
-
+	~INA226();
 //private
-//	uint16_t read_register(uint8_t reg);
-//		void write_register(uint8_t reg, uint16_t value);
+	uint16_t read_register(uint8_t reg);
+	void write_register(uint8_t reg, uint16_t value);
 
 
 	void set_i2c_addr(char addr){ addr_ = addr;}
@@ -53,7 +52,14 @@ public:
 	void set_vshunt_conv_timer(uint16_t ct);
 	void set_operating_mode(uint8_t mode);
 
-	~INA226();
+
+	int get_bus_voltage(bool return_raw_data = true);
+	int get_bus_current(bool return_raw_data = true);
+	int get_shunt_voltage(bool return_raw_data = true);
+	void set_calibration_value(uint16_t calib);
+
 };
+
+int TwoComplement2ModSig_16bit(uint16_t a);
 
 #endif /* INA226_H_ */

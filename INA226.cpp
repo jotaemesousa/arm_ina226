@@ -21,10 +21,18 @@
 #include "utils/ustdlib.h"
 #include <stdint.h>
 #include <math.h>
+
+extern "C"
+{
 #include "libraries/I2Cdev/i2cutil.h"
+}
+
+// CAL 2560
+// max current 0.000152587890625 LSB
 
 INA226::INA226()
 {
+	addr_ = 0;
 	conf_reg_high_ = 0x41;
 	conf_reg_low_ = 0x27;
 }
@@ -36,59 +44,39 @@ INA226::INA226(char addr)
 	conf_reg_low_ = 0x27;
 }
 
-INA226::~INA226() {
+INA226::~INA226()
+{
 	// TODO Auto-generated destructor stub
 }
 
-//uint16_t INA226::read_register(uint8_t reg)
-//{
-//	uint16_t conf_reg = 0;
-//	I2CMasterSlaveAddrSet(I2C0_MASTER_BASE, addr_ ,false);
-//	// true = the I2C Master is initiating a read from the slave,
-//	// false = The I2C Master is initiating a write to the slave
-//
-//	I2CMasterDataPut(I2C0_MASTER_BASE, reg);
-//	I2CMasterControl(I2C0_MASTER_BASE, I2C_MASTER_CMD_SINGLE_SEND);
-//	while(I2CMasterBusy(I2C0_MASTER_BASE));
-//
-//	I2CMasterSlaveAddrSet(I2C0_MASTER_BASE, addr_ ,true);
-//	// true = the I2C Master is initiating a read from the slave,
-//	// false = The I2C Master is initiating a write to the slave
-//
-//	I2CMasterControl(I2C0_MASTER_BASE, I2C_MASTER_CMD_BURST_RECEIVE_START);
-//	while(I2CMasterBusy(I2C0_MASTER_BASE));
-//
-//	conf_reg = I2CMasterDataGet(I2C0_MASTER_BASE) << 8;
-//
-//	I2CMasterControl(I2C0_MASTER_BASE, I2C_MASTER_CMD_BURST_RECEIVE_FINISH);
-//	while(I2CMasterBusy(I2C0_MASTER_BASE));
-//
-//	conf_reg |= I2CMasterDataGet(I2C0_MASTER_BASE);
-//
-//	conf_reg_ = conf_reg;
-//
-//	return conf_reg;
-//}
-//
-//void INA226::write_register(uint8_t reg, uint16_t value)
-//{
-//	I2CMasterSlaveAddrSet(I2C0_MASTER_BASE, addr_ ,false);
-//
-//	//Set reg
-//	I2CMasterDataPut(I2C0_MASTER_BASE, reg);
-//	I2CMasterControl(I2C0_MASTER_BASE, I2C_MASTER_CMD_BURST_SEND_START);
-//	while(I2CMasterBusy(I2C0_MASTER_BASE));
-//
-//	//send value (first 8 bits)
-//	I2CMasterDataPut(I2C0_MASTER_BASE, (value & 0xFF00) >> 8);
-//	I2CMasterControl(I2C0_MASTER_BASE, I2C_MASTER_CMD_BURST_SEND_CONT);
-//	while(I2CMasterBusy(I2C0_MASTER_BASE));
-//
-//	//send value (first 8 bits)
-//	I2CMasterDataPut(I2C0_MASTER_BASE, (value & 0x00FF));
-//	I2CMasterControl(I2C0_MASTER_BASE, I2C_MASTER_CMD_BURST_SEND_FINISH);
-//	while(I2CMasterBusy(I2C0_MASTER_BASE));
-//}
+uint16_t INA226::read_register(uint8_t reg)
+{
+	if(addr_)
+	{
+		unsigned char data[2];
+		data[0] = reg;
+
+		i2cWrite(addr_, data, 1);
+		i2cRead(addr_, data, 2);
+
+		conf_reg_high_ = data[0];
+		conf_reg_low_ = data[1];
+
+		return (conf_reg_high_ << 8) | conf_reg_low_;
+	}
+}
+
+void INA226::write_register(uint8_t reg, uint16_t value)
+{
+	if(addr_)
+	{
+		unsigned char data[3];
+		data[0] = reg;
+		data[1] = (value & 0xFF00) >> 8;
+		data[2] = value & 0xFF;
+		i2cWrite(addr_, data, 3);
+	}
+}
 
 void INA226::set_sample_average(int avg)
 {
@@ -97,69 +85,140 @@ void INA226::set_sample_average(int avg)
 	switch (avg)
 	{
 	case 4:
-		new_conf_reg_high |= ~0b11110011;
+		new_conf_reg_high |= 0b00000010;
 		break;
 	case 16:
-		new_conf_reg_high |= ~0b11110101;
+		new_conf_reg_high |= 0b00000100;
 		break;
 	case 64:
-		new_conf_reg_high |= ~0b11110111;
+		new_conf_reg_high |= 0b00000110;
 		break;
 	case 128:
-		new_conf_reg_high |= ~0b11111001;
+		new_conf_reg_high |= 0b00001000;
 		break;
 	case 256:
-		new_conf_reg_high |= ~0b11111011;
+		new_conf_reg_high |= 0b00001010;
 		break;
 	case 512:
-		new_conf_reg_high |= ~0b11111101;
+		new_conf_reg_high |= 0b00001100;
 		break;
 	case 1024:
-		new_conf_reg_high |= ~0b11111111;
+		new_conf_reg_high |= 0b00001110;
 		break;
 	}
-	//write_register(CONFGURATION_REGISTER, new_conf_reg);
-	unsigned char to_send[3];
-	to_send[0] = REG_CONFGURATION;
-	to_send[1] = new_conf_reg_high;
-	to_send[2] = conf_reg_low_;
-
-	i2cWrite(addr_, to_send, 3);
+	write_register(REG_CONFGURATION, (new_conf_reg_high << 8) | conf_reg_low_);
 	conf_reg_high_ = new_conf_reg_high;
 }
 
-//void INA226::set_vbus_conv_timer(uint16_t ct)
-//{
-//	uint16_t new_conf_reg = conf_reg_ & 0b1111111000111111;
-//
-//	if(ct < 8)
-//	{
-//		new_conf_reg |= (ct & 0b00000111) << 6;
-//	}
-//	write_register(CONFGURATION_REGISTER, new_conf_reg);
-//	conf_reg_ = new_conf_reg;
-//}
-//
-//void INA226::set_vshunt_conv_timer(uint16_t ct)
-//{
-//	uint16_t new_conf_reg = conf_reg_ & 0b1111111111000111;
-//
-//	if(ct < 8)
-//	{
-//		new_conf_reg |= (ct & 0b00000111) << 3;
-//	}
-//	write_register(CONFGURATION_REGISTER, new_conf_reg);
-//	conf_reg_ = new_conf_reg;
-//}
-//
-//void INA226::set_operating_mode(uint8_t mode)
-//{
-//	uint16_t new_conf_reg = conf_reg_ & 0b1111111111111000;
-//
-//	if(mode < 8)
-//	{
-//		new_conf_reg |= (mode & 0b00000111);
-//	}
-//	write_register(CONFGURATION_REGISTER, new_conf_reg);
-//	conf_reg_ = new_conf_reg;
-//}
+int INA226::get_bus_voltage(bool return_raw_data)
+{
+	unsigned int read_data = read_register(REG_BUS_VOLTAGE);
+
+	if(return_raw_data)
+	{
+		read_data *= 125;
+		read_data /= 100;
+		return read_data;
+	}
+	else
+	{
+		return read_data;
+	}
+}
+
+int INA226::get_bus_current(bool return_raw_data)
+{
+	unsigned int read_data = read_register(REG_CURRENT);
+
+	read_data = TwoComplement2ModSig_16bit(read_data);
+
+	if(return_raw_data)
+	{
+		read_data *= 125 / 1000000;
+		return read_data;
+	}
+	else
+	{
+		return read_data;
+	}
+}
+
+int INA226::get_shunt_voltage(bool return_raw_data)
+{
+	unsigned int read_data = read_register(REG_CURRENT);
+
+	read_data = TwoComplement2ModSig_16bit(read_data);
+
+	if(return_raw_data)
+	{
+		read_data *= 25;
+		read_data /= 10;
+		return read_data;
+	}
+	else
+	{
+		return read_data;
+	}
+}
+
+void INA226::set_vbus_conv_timer(uint16_t ct)
+{
+	uint8_t new_conf_reg_high = conf_reg_high_ & 0xFE;
+	uint16_t new_conf_reg_low = conf_reg_low_ & 0x3F;
+	if(ct < 8)
+	{
+		new_conf_reg_high |= ((ct & 0b00000111) >> 2);
+		new_conf_reg_low |= (((ct & 0b00000111) << 6) && 0xFF);
+	}
+	new_conf_reg_low |= (new_conf_reg_high << 8);
+	write_register(REG_CONFGURATION, new_conf_reg_low);
+	conf_reg_low_ = new_conf_reg_low && 0xFF;
+	conf_reg_high_ = new_conf_reg_high;
+}
+
+void INA226::set_vshunt_conv_timer(uint16_t ct)
+{
+	uint16_t new_conf_reg_low = conf_reg_low_ & 0x38;
+
+	if(ct < 8)
+	{
+		new_conf_reg_low |= ((ct & 0b00000111) << 3);
+	}
+	new_conf_reg_low |= (conf_reg_high_ << 8);
+	write_register(REG_CONFGURATION, new_conf_reg_low);
+	conf_reg_low_ = new_conf_reg_low && 0xFF;
+}
+
+void INA226::set_operating_mode(uint8_t mode)
+{
+	uint16_t new_conf_reg_low = conf_reg_low_ & 0x07;
+
+	if(mode < 8)
+	{
+		new_conf_reg_low |= (mode & 0b00000111);
+	}
+	new_conf_reg_low |= (conf_reg_high_ << 8);
+	write_register(REG_CONFGURATION, new_conf_reg_low);
+	conf_reg_low_ = new_conf_reg_low && 0xFF;
+}
+
+void INA226::set_calibration_value(uint16_t calib)
+{
+
+}
+
+int TwoComplement2ModSig_16bit(uint16_t a)
+{
+	int mask = 0;
+	mask = 0x8000;
+	if((a & mask) == mask)
+	{
+		a = ~a;
+		a = a + 1;
+		return -a;
+	}
+	else
+	{
+		return a;
+	}
+}

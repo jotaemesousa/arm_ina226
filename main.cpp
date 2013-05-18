@@ -127,13 +127,19 @@ int main(void)
 
 	read_ina = power_meter.read_register(REG_CONFGURATION);
 
+	power_meter.set_sample_average(16);
+
+	read_ina = power_meter.read_register(REG_CONFGURATION);
+
 	UARTprintf("Conf reg = %X", read_ina);
 
 	while (1)
 	{
-
-
-
+		read_ina = power_meter.get_bus_voltage();
+		UARTprintf("Bus Voltage = %d mV\n", read_ina);
+//		read_ina = power_meter.read_register(REG_CURRENT);
+//		UARTprintf("Current = %X\n", read_ina);
+		SysCtlDelay(200*ulClockMS);
 	}
 
 }
