@@ -210,7 +210,7 @@ int TwoComplement2ModSig_16bit(uint16_t a)
 	if((a & mask) == mask)
 	{
 		a = ~a;
-		a = a + 1;
+		a = a - 1;
 		return -a;
 	}
 	else
