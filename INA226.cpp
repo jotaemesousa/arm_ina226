@@ -202,6 +202,89 @@ uint16_t INA226::get_calibration_value(void)
 	return read_register(REG_CALIBRATION);
 }
 
+void INA226::set_alert_limit_register(uint16_t value)
+{
+	write_register(REG_ALERT_LIMIT, value & 0xFFFF);
+}
+
+uint16_t INA226::get_alert_limit_register(void)
+{
+	return read_register(REG_ALERT_LIMIT);
+}
+
+void INA226::set_mask_enable_register(uint16_t bits)
+{
+	write_register(REG_MASK_ENABLE, bits & 0xFFFF);
+}
+
+uint16_t INA226::get_mask_enable_register(void)
+{
+	return read_register(REG_MASK_ENABLE);
+}
+
+void INA226::set_shunt_over_limit_bit(void)
+{
+	write_register(REG_MASK_ENABLE, SHUNT_OVER_LIMIT);
+}
+void INA226::set_shunt_under_limit_bit(void)
+{
+	write_register(REG_MASK_ENABLE, SHUNT_UNDER_LIMIT);
+}
+void INA226::set_bus_over_limit_bit(void)
+{
+	write_register(REG_MASK_ENABLE, BUS_OVER_LIMIT);
+}
+void INA226::set_bus_under_limit_bit(void)
+{
+	write_register(REG_MASK_ENABLE, BUS_UNDER_LIMIT);
+}
+void INA226::set_over_power_limit_bit(void)
+{
+	write_register(REG_MASK_ENABLE, OVER_POWER_LIMIT);
+}
+void INA226::set_conversion_ready_alert_bit(void)
+{
+	write_register(REG_MASK_ENABLE, CONVERSION_READY);
+}
+void INA226::set_bus_voltage_limit(float volts)
+{
+	uint16_t temp = volts * 100000 / 125;
+	write_register(REG_ALERT_LIMIT, temp & 0xFFFF);
+}
+void INA226::set_shunt_voltage_limit(float microvolts)
+{
+	uint16_t temp = microvolts * 10 / 25;
+	write_register(REG_ALERT_LIMIT, temp & 0xFFFF);
+}
+void INA226::set_power_limit(float watts)
+{
+	//TODO:
+}
+void INA226::set_alert_polarity_bit(bool mode)
+{
+	uint16_t temp = get_mask_enable_register();
+	if(mode)
+	{
+		temp |= ALERT_POLARITY_BIT;
+	}
+	else
+	{
+		temp &= ~ALERT_POLARITY_BIT;
+	}
+	set_mask_enable_register(temp);
+}
+
+bool INA226::read_math_overflow_flag(void)
+{
+	if((get_mask_enable_register() & MATH_OVERFLOW_FLAG) == MATH_OVERFLOW_FLAG)
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
 
 int TwoComplement2ModSig_16bit(uint16_t a)
 {
@@ -217,4 +300,10 @@ int TwoComplement2ModSig_16bit(uint16_t a)
 	{
 		return a;
 	}
+}
+
+uint16_t ModSig_16bit2TwoComplement(int a)
+{
+	uint16_t temp = ~a + 1;
+	return temp | 0x0000;
 }

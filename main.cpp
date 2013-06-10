@@ -133,11 +133,14 @@ int main(void)
 
 	UARTprintf("Conf reg = %X\n", read_ina);
 
-	power_meter.set_calibration_value(2560);
+	power_meter.set_calibration_value(445);
 
 	read_ina = power_meter.get_calibration_value();
 
 	UARTprintf("Calib. value = %d\n", read_ina);
+
+	power_meter.set_bus_voltage_limit(6.2);
+	power_meter.set_mask_enable_register(BUS_UNDER_LIMIT);
 
 	while (1)
 	{
